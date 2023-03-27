@@ -1,0 +1,12 @@
+version: '3.7'
+
+volumes:
+  NeptuniaData:
+  RedisData:
+
+services:
+  neptunia:
+    build: .
+    container_name: neptunia_app
+    ports:
+      - 8011:8011

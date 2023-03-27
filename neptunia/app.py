@@ -156,6 +156,12 @@ def get_page_urls(response, url_filter_funcs=[]):
 #             time.sleep(10)
 
 
+def test_server():
+    while True:
+        print('Running test server')
+        time.sleep(10)
+
+
 def main(url_filter_funcs=[]):
     """Main entry point for the
     webcrawler"""
@@ -184,4 +190,5 @@ if __name__ == '__main__':
     # thread = threading.Thread(target=main)
     # thread.name = 'crawler'
     # thread.start()
-    main()
+    # main()
+    test_server()
