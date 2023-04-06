@@ -127,6 +127,9 @@ class Middlewares:
     def __len__(self):
         return len(self.container)
 
+    def __getitem__(self, name):
+        return self.container[name]
+
     def run_middlewares(self, response, soup, xml):
         for klass in self.container.values():
             klass(response, soup, xml)

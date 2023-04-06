@@ -1,15 +1,17 @@
 import unittest
-from neptune import config, middlewares
+from neptunia import config
 
 
 class TestConfig(unittest.TestCase):
     def test_loading(self):
-        self.assertEqual(config.settings.default_section, 'DEFAULT')
-
-
-class TestMiddlewares(unittest.TestCase):
-    def test_loading(self):
-        self.assertTrue(len(middlewares.container) > 0)
+        self.assertEqual(
+            config.settings.default_section,
+            'DEFAULT'
+        )
+        self.assertEqual(
+            config.settings.get('DEFAULT', 'user_agents_file'),
+            'user_agents.csv'
+        )
 
 
 if __name__ == '__main__':
