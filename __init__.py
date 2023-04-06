@@ -1,4 +1,3 @@
-from neptunia.neptunia.db.connections import Connections
 import configparser
 import csv
 import inspect

@@ -1,2 +1,0 @@
-class BaseSelect:
-    template = 'SELECT'
