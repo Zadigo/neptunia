@@ -185,7 +185,7 @@ def main(url_filter_funcs=[]):
 
         logger.instance.info('Waiting 10 seconds')
         # cache.persist('urls_to_visit')
-        time.sleep(1)
+        time.sleep(10)
 
 
 if __name__ == '__main__':
