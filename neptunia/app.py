@@ -4,6 +4,7 @@ import pathlib
 import random
 import threading
 import time
+from argparse import ArgumentParser
 from functools import lru_cache
 from urllib.parse import urljoin, urlparse
 
@@ -13,10 +14,6 @@ from lxml import etree
 
 from neptunia import cache, logger, middlewares
 
-# PROJECT_PATH = pathlib.Path('.').absolute()
-
-# URL = 'https://www.hotelgeorgette.com/'
-# URL = 'http://example.com'
 URL = 'http://gency313.fr'
 
 INITIAL_DOMAIN = urlparse(URL)
@@ -155,11 +152,10 @@ def get_page_urls(response, url_filter_funcs=[]):
     logger.instance.info(f'{len(links_found)} urls found')
 
 
-def main(debug=False, url_filter_funcs=[]):
+def main(url_filter_funcs=[]):
     """Main entry point for the webcrawler"""
 
     while URLS_TO_VISIT:
-        # if not debug:
         url_to_visit = URLS_TO_VISIT.pop()
 
         # This is a security measure created in case
@@ -181,7 +177,7 @@ def main(debug=False, url_filter_funcs=[]):
 
         soup = get_soup(response)
         xml = get_xml_page(response)
-        
+
         # TODO:Delegate both the response and the
         # soup to a user defined underlying function
 
@@ -193,7 +189,7 @@ def main(debug=False, url_filter_funcs=[]):
 
 
 if __name__ == '__main__':
-    # thread = threading.Thread(target=main)
-    # thread.name = 'crawler'
-    # thread.start()
+    parser = ArgumentParser(description='Simple web crawler')
+    parser.add_argument('-u', '--url', type=str)
+    namespace = parser.parse_args()
     main(debug=True)
