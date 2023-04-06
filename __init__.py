@@ -56,12 +56,14 @@ class Cache:
 
     def get(self, key):
         return self.container[key]
-    
+
     def reset_key(self, key):
         self.container[key] = []
 
     def persist(self, key):
-        file_path = 'D:/personnal/neptune/neptune/cache.csv'
+        """Persist the data of a given key
+        to the "cache.csv" file"""
+        file_path = PROJECT_PATH / 'neptunia/cache.csv'
         with open(file_path, mode='w', newline='\n', encoding='utf-8') as f:
             csv_writer = csv.writer(f)
             map_fo_csv = map(lambda x: [x], self.get(key))
@@ -74,7 +76,7 @@ cache = Cache()
 class Config:
     def __init__(self):
         instance = configparser.ConfigParser()
-        with open('D:/personnal/neptune/neptune/conf.cfg', mode='r') as f:
+        with open(PROJECT_PATH / 'neptunia/conf.cfg', mode='r') as f:
             instance.read_file(f)
             self.settings = instance
         logger.instance.info('Configuration file loaded')
@@ -103,7 +105,7 @@ class Middlewares:
     MODULE = None
 
     def __init__(self):
-        self.MODULE = import_module('neptune.neptune.middlewares')
+        self.MODULE = import_module('neptunia.neptunia.middlewares')
         self._middleware_cache = config.load_as_array('options', 'middlewares')
         registered_middlewares = map(
             lambda x: x.rsplit('.', maxsplit=1),

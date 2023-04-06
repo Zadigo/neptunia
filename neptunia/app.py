@@ -13,11 +13,11 @@ from lxml import etree
 
 from neptunia import cache, logger, middlewares
 
-PROJECT_PATH = pathlib.Path('.').absolute()
+# PROJECT_PATH = pathlib.Path('.').absolute()
 
 # URL = 'https://www.hotelgeorgette.com/'
 # URL = 'http://example.com'
-URL = 'http://johnpm.fr'
+URL = 'http://gency313.fr'
 
 INITIAL_DOMAIN = urlparse(URL)
 
@@ -39,7 +39,9 @@ def get_url_object(url):
 
 def read_file(filename):
     # full_path = PROJECT_PATH.joinpath(f'{filename}.csv')
-    full_path = f'D:/personnal/neptune/neptune/{filename}.csv'
+    # full_path = f'D:/personnal/neptune/neptune/{filename}.csv'
+    project_path = cache.get('project_path')
+    full_path = project_path[0] / f'neptunia/{filename}.csv'
     with open(full_path, encoding='utf-8') as f:
         reader = csv.reader(f)
         data = itertools.chain(*list(reader))
@@ -67,20 +69,28 @@ def useragent_rotator(filename='user_agents'):
 def get_page(url):
     VISITED_URLS.add(url)
 
-    proxy = {'http': proxy_rotator}
+    proxy_value = proxy_rotator
+    proxy = {
+        'http': proxy_value
+    }
     user_agent = useragent_rotator
 
-    response = requests.get(
-        url,
-        # proxies=proxy,
-        headers={
-            'Accept': 'text/html,application/json,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Cache-Control': 'max-age=0',
-            'User-Agent': user_agent
-        }
-    )
-    logger.instance.info(f'Visited url: {url}')
-    return response
+    try:
+        response = requests.get(
+            url,
+            # proxies=proxy,
+            headers={
+                'Accept': 'text/html,application/json,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Cache-Control': 'max-age=0',
+                'User-Agent': user_agent
+            }
+        )
+    except Exception as e:
+        print(e.args)
+        return None
+    else:
+        logger.instance.info(f'Visited url: {url}')
+        return response
 
 
 def get_soup(response):
@@ -98,16 +108,20 @@ def get_page_urls(response, url_filter_funcs=[]):
     currently visited page"""
     soup = get_soup(response)
 
-    for link in soup.find_all('a'):
+    links_found = soup.find_all('a')
+    for link in links_found:
         url = link.attrs.get('href', None)
 
         if url is None:
             continue
 
-        # Sometimes we'll get paths so we need
-        # reconcile the domain and the latter
+        # Sometimes we'll get paths (ex. /some-path),
+        # so we need reconcile the domain and the latter
         if url.startswith('/'):
-            url = urljoin(f'https://{INITIAL_DOMAIN.netloc}', url)
+            url = urljoin(
+                f'{INITIAL_DOMAIN.scheme}://{INITIAL_DOMAIN.netloc}',
+                url
+            )
 
         # Only visit urls from the same
         # domain to avoid exploring the
@@ -127,61 +141,59 @@ def get_page_urls(response, url_filter_funcs=[]):
         if is_image:
             continue
 
+        # Additional security measure, if the url has already
+        # been visited, do not add it to the current list. This
+        # might seem redundant but it happens that when the scrapper
+        # visit a new page and finds urls (including those that has
+        # been visited), since they are no longer present in
+        # URLS_TO_VISIT, they are added once again making a sort
+        # of infinite loop where the URLS_TO_VISIT does not reach to 0
+        if url in VISITED_URLS:
+            continue
+
         URLS_TO_VISIT.add(url)
-    logger.instance.info(f'{len(URLS_TO_VISIT)} urls to visit')
+    logger.instance.info(f'{len(links_found)} urls found')
 
 
-# class Main:
-#     _urls_to_visit = []
-
-#     def run(self, url):
-#         self._urls_to_visit = [url]
-
-#         while URLS_TO_VISIT:
-#             url_to_visit = self._urls_to_visit.pop()
-#             response = get_page(url_to_visit)
-#             get_page_urls(response)
-
-#             cache.set('urls_to_visit', list(self._urls_to_visit))
-
-#             # Delegate both the response and the
-#             # soup to a user defined underlying function
-#             soup = get_soup(response)
-#             xml = get_xml_page(response)
-
-#             middlewares.run_middlewares(response, soup, xml)
-
-#             logger.instance.info('Waiting 10 seconds')
-#             # cache.persist('urls_to_visit')
-#             time.sleep(10)
-
-
-def main(url_filter_funcs=[]):
-    """Main entry point for the
-    webcrawler"""
+def main(debug=False, url_filter_funcs=[]):
+    """Main entry point for the webcrawler"""
 
     while URLS_TO_VISIT:
+        # if not debug:
         url_to_visit = URLS_TO_VISIT.pop()
+
+        # This is a security measure created in case
+        # a page we have already visited escapes the
+        # previous checks
+        if url_to_visit in VISITED_URLS:
+            continue
+
+        logger.instance.info(f'{len(URLS_TO_VISIT)} urls left to visit')
         response = get_page(url_to_visit)
+
+        if response is None:
+            continue
+
         get_page_urls(response, url_filter_funcs=url_filter_funcs)
 
         cache.set('urls_to_visit', list(URLS_TO_VISIT))
+        cache.set('visited_urls', list(VISITED_URLS))
 
-        # Delegate both the response and the
-        # soup to a user defined underlying function
         soup = get_soup(response)
         xml = get_xml_page(response)
+        
+        # TODO:Delegate both the response and the
+        # soup to a user defined underlying function
 
         middlewares.run_middlewares(response, soup, xml)
 
         logger.instance.info('Waiting 10 seconds')
         # cache.persist('urls_to_visit')
-        print(URLS_TO_VISIT)
-        time.sleep(10)
+        time.sleep(1)
 
 
 if __name__ == '__main__':
     # thread = threading.Thread(target=main)
     # thread.name = 'crawler'
     # thread.start()
-    main()
+    main(debug=True)

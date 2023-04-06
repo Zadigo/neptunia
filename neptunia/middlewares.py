@@ -32,6 +32,7 @@ class TextMiddleware(TextMixin, BaseMiddleware):
 
 class EmailMiddleware(TextMixin, BaseMiddleware):
     """Collects emails on all visited pages"""
+
     container = set()
 
     def __call__(self, response, soup, xml):
@@ -51,6 +52,7 @@ class EmailMiddleware(TextMixin, BaseMiddleware):
 
 class ImageMiddleware(BaseMiddleware):
     """Collect images on all visited pages"""
+
     container = deque()
     restricted_to = ['jpg', 'jpeg']
 
@@ -66,3 +68,60 @@ class ImageMiddleware(BaseMiddleware):
             return False
         valid_images = filter(identify_image, urls)
         self.container.extendleft(list(valid_images))
+
+
+class SEOMiddleware(BaseMiddleware):
+    """Middleware that runs an SEO audit on
+    all the visited pages"""
+
+    audits = deque()
+    failed_urls = []
+    csv_file = [['title', 'title_length', 'title_is_valid', 'description',
+                    'description_is_valid', 'url', 'word_analysis', 'status_code']]
+
+    def __call__(self, response, soup, xml):
+        if 400 >= response.status_code <= 599:
+            self.failed_urls.append({
+                'url': response.url,
+                'status_code': response.status_code
+            })
+        else:
+            title = soup.find('title').text
+
+            instance = NLTKWordTokenizer()
+            tokens = instance.tokenize(soup.body.text)
+            counter = Counter(tokens)
+            most_common = counter.most_common(10)
+
+            description = soup.find('meta', attrs={'name': 'description'}).text
+            description_tokens = instance.tokenize(description)
+
+
+            audit = {
+                'title': title,
+                'title_length': len(title),
+                'title_is_valid': len(title) <= 60,
+                'description': description,
+                'description_is_valid': len(description) <= 150,
+                'url': response.url,
+                'word_analysis': most_common,
+                'status_code': response.status_code
+            }
+            self.csv_file.append([
+                title,
+                len(title),
+                len(title) <= 60,
+                description,
+                len(description) <= 150,
+                response.url,
+                most_common,
+                response.status_code
+            ])
+            self.audits.append(audit)
+
+    @property
+    def get_report(self):
+        return {
+            'audit': self.audits,
+            'errors': self.failed_urls
+        }
