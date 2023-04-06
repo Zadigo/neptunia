@@ -1,7 +1,6 @@
 import unittest
 from neptunia import config
 
-
 class TestConfig(unittest.TestCase):
     def test_loading(self):
         self.assertEqual(

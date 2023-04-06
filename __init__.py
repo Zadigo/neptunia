@@ -1,3 +1,4 @@
+from neptunia.neptunia.db.connections import Connections
 import configparser
 import csv
 import inspect
@@ -137,6 +138,9 @@ class Middlewares:
 
 middlewares = Middlewares()
 
+connections = Connections()
+
 cache.set('config', config)
 cache.set('middlewares', middlewares)
 cache.set('project_path', PROJECT_PATH)
+cache.set('connections', connections)

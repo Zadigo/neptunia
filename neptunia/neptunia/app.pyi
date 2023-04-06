@@ -1,10 +1,9 @@
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal, Type
+from typing import Any, Literal
 from urllib.parse import ParseResult
 
 from bs4 import BeautifulSoup
-from lxml import etree
 from requests.models import Response
 
 PROJECT_PATH: Path = ...
@@ -49,7 +48,7 @@ def get_page(url: str) -> Response: ...
 def get_soup(response: Response) -> BeautifulSoup: ...
 
 
-def get_xml_page(response: Response) -> etree.HTMLParser: ...
+def get_xml_page(response: Response) -> Any: ...
 
 
 def get_page_urls(response: Response) -> None: ...

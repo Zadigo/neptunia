@@ -25,18 +25,11 @@ URLS_TO_VISIT = set([URL])
 VISITED_URLS = set()
 
 
-def database():
-    conection = None
-    return conection
-
-
 def get_url_object(url):
     return urlparse(url)
 
 
 def read_file(filename):
-    # full_path = PROJECT_PATH.joinpath(f'{filename}.csv')
-    # full_path = f'D:/personnal/neptune/neptune/{filename}.csv'
     project_path = cache.get('project_path')
     full_path = project_path[0] / f'neptunia/{filename}.csv'
     with open(full_path, encoding='utf-8') as f:
