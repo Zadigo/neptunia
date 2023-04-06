@@ -9,7 +9,30 @@ services:
     build: .
     container_name: neptunia_app
     ports:
-      - 8011:8011
+      - 8000:8000
+    volumes:
+      - ./neptunia:/neptunia/cache.csv
+    networks:
+      - neptunia
 
   redis:
     image: 'redis'
+    container_name: redis_app
+    ports:
+      - 6379:6000
+    volumes:
+      - RedisData:/data
+    networks:
+      - neptunia
+
+  n8n:
+    image: 'n8nio/n8n'
+    container_name: n8n_app
+    ports:
+      - 5678:5678
+    networks:
+      - neptunia
+
+networks:
+  neptunia:
+    driver: bridge
