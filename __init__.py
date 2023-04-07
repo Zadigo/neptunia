@@ -3,6 +3,7 @@ import csv
 import inspect
 import itertools
 import json
+import datetime
 import logging
 import pathlib
 from collections import defaultdict
@@ -189,17 +190,22 @@ class File:
                 data = itertools.chain(*list(reader))
                 return set(data)
             elif self.is_json:
-                pass
+                return json.load(f)
             else:
                 return f.read()
 
     def write(self, values):
-        with open(self.path, mode='w', newline='', encoding='utf-8') as f:
+        with open(self.path, mode='+a', newline='', encoding='utf-8') as f:
             if f.writable():
                 if self.is_csv:
                     writer = csv.writer(f)
                     for value in values:
                         writer.writerow(value)
+                elif self.is_json:
+                    data = json.load(f)
+                    data['date'] = str(datetime.datetime.now().timestamp())
+                    data['cache'] = json.dumps(values)
+                    json.dump(data, f)
                 else:
                     f.write(values)
 
