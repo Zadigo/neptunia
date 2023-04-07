@@ -1,5 +1,3 @@
-import csv
-import itertools
 import random
 import time
 from functools import lru_cache
@@ -9,9 +7,9 @@ import requests
 from bs4 import BeautifulSoup
 from lxml import etree
 
-from neptunia import cache, logger, middlewares
+from neptunia import cache, logger, middlewares, storage
 
-URL = 'http://gency313.fr'
+URL = 'https://www.etam.com/'
 
 INITIAL_DOMAIN = urlparse(URL)
 
@@ -21,18 +19,11 @@ URLS_TO_VISIT = set([URL])
 
 VISITED_URLS = set()
 
+WAIT_TIME = 25
+
 
 def get_url_object(url):
     return urlparse(url)
-
-
-def read_file(filename):
-    project_path = cache.get('project_path')
-    full_path = project_path[0] / f'neptunia/{filename}.csv'
-    with open(full_path, encoding='utf-8') as f:
-        reader = csv.reader(f)
-        data = itertools.chain(*list(reader))
-        return set(data)
 
 
 @lru_cache(maxsize=300)
@@ -44,21 +35,22 @@ def get_random(func):
 
 
 @get_random
-def proxy_rotator(filename='proxies'):
-    return read_file(filename)
+def proxy_rotator():
+    """Function that rotates proxies"""
+    return storage.get('proxies')
 
 
 @get_random
-def useragent_rotator(filename='user_agents'):
-    return read_file(filename)
+def useragent_rotator():
+    """Function that rotates user agents"""
+    return list(storage.get('user_agents'))
 
 
 def get_page(url):
     VISITED_URLS.add(url)
 
-    proxy_value = proxy_rotator
     proxy = {
-        'http': proxy_value
+        'http': proxy_rotator
     }
     user_agent = useragent_rotator
 
@@ -173,24 +165,6 @@ def main(url_filter_funcs=[]):
 
         middlewares.run_middlewares(response, soup, xml)
 
-        logger.instance.info('Waiting 10 seconds')
-        # cache.persist('urls_to_visit')
-        time.sleep(10)
-
-
-# if __name__ == '__main__':
-#     # parser = ArgumentParser(description='Simple web crawler')
-#     # parser.add_argument('-u', '--url', type=str)
-#     # namespace = parser.parse_args()
-
-#     # process = Process(target=main, args=[False])
-#     # process.start()
-#     # process.join()
-
-#     # try:
-#     #     pass
-#     # except KeyboardInterrupt:
-#     #     print('Crawler stopped')
-#     #     sys.exit(0)
-#     # finally:
-#     #     pass
+        logger.instance.info(f'Waiting {WAIT_TIME} seconds')
+        cache.persist('urls_to_visit')
+        time.sleep(WAIT_TIME)

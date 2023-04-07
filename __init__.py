@@ -1,6 +1,8 @@
+import itertools
 import configparser
 import csv
 import inspect
+from functools import lru_cache
 import json
 import logging
 import pathlib
@@ -63,14 +65,11 @@ class Cache:
     def persist(self, key):
         """Persist the data of a given key
         to the "cache.csv" file"""
-        file_path = PROJECT_PATH / 'neptunia/cache.csv'
-        with open(file_path, mode='w', newline='\n', encoding='utf-8') as f:
+        file_path = PROJECT_PATH / 'neptunia/data/cache.csv'
+        with open(file_path, mode='w', newline='', encoding='utf-8') as f:
             csv_writer = csv.writer(f)
-            map_fo_csv = map(lambda x: [x], self.get(key))
-            csv_writer.writerows(map_fo_csv)
-
-
-cache = Cache()
+            map_to_csv = map(lambda x: [x], self.get(key))
+            csv_writer.writerows(map_to_csv)
 
 
 class Config:
@@ -135,9 +134,118 @@ class Middlewares:
             klass(response, soup, xml)
 
 
-middlewares = Middlewares()
+class File:
+    def __init__(self, path, name=None):
+        self.path = path
+        self.name = name or path.stem
 
+    def __repr__(self):
+        return f'<{self.__class__.__name__}({self.path})>'
+
+    def __hash__(self):
+        return hash((self.name, str(self.path)))
+
+    def __str__(self):
+        return str(self.read())
+
+    def __eq__(self, name):
+        return any([
+            self.name == name,
+            name in self.name
+        ])
+
+    def __iter__(self):
+        for value in self.read():
+            yield value
+
+    @property
+    def is_csv(self):
+        return 'csv' in self.path.name
+
+    @property
+    def is_json(self):
+        return 'json' in self.path.name
+
+    def iter_chunks(self, chunks=10):
+        """Returns a group of iterators sliced by `n`
+        number of items"""
+        if chunks < 1:
+            raise ValueError('Chunks should be at least 1')
+        iterable = iter(self.read())
+        while True:
+            chunked_items = itertools.islice(iterable, chunks)
+            try:
+                first_element = next(chunked_items)
+            except StopIteration:
+                return
+            yield itertools.chain([first_element], chunked_items)
+
+    @lru_cache(maxsize=1)
+    def read(self):
+        """Reads the content a file"""
+        with open(self.path, encoding='utf-8') as f:
+            if self.is_csv:
+                reader = csv.reader(f)
+                data = itertools.chain(*list(reader))
+                return set(data)
+            elif self.is_json:
+                pass
+            else:
+                return f.read()
+
+    def write(self, values):
+        with open(self.path, mode='w', newline='', encoding='utf-8') as f:
+            if f.writable():
+                if self.is_csv:
+                    writer = csv.writer(f)
+                    for value in values:
+                        writer.writerow(value)
+                else:
+                    f.write(values)
+
+
+class Storage:
+    """A class that preload files from
+    the storage container"""
+    _files_cache = []
+    file_map = {}
+
+    def __init__(self):
+        self._files_cache = self.load_files()
+        for file in self._files_cache:
+            self.file_map[file.stem] = File(file)
+        logger.instance.info(f'Storage loaded: {len(self)} files')
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__} files: {self.__len__()}>'
+
+    def __getitem__(self, name):
+        return self.get(name)
+
+    def __contains__(self, name):
+        return self.has_file(name)
+
+    def __len__(self):
+        return len(self._files_cache)
+
+    def load_files(self):
+        return list(pathlib.Path('neptunia/data').glob('**/*'))
+
+    def has_file(self, name):
+        items = list(filter(lambda x: name in x.name, self._files_cache))
+        if items:
+            return True
+        return False
+
+    def get(self, name):
+        return self.file_map[name]
+
+
+cache = Cache()
+middlewares = Middlewares()
+storage = Storage()
 
 cache.set('config', config)
 cache.set('middlewares', middlewares)
 cache.set('project_path', PROJECT_PATH)
+cache.set('storage', storage)
