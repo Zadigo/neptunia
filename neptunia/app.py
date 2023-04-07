@@ -1,10 +1,7 @@
 import csv
 import itertools
-import pathlib
 import random
-import threading
 import time
-from argparse import ArgumentParser
 from functools import lru_cache
 from urllib.parse import urljoin, urlparse
 
@@ -181,8 +178,19 @@ def main(url_filter_funcs=[]):
         time.sleep(10)
 
 
-if __name__ == '__main__':
-    parser = ArgumentParser(description='Simple web crawler')
-    parser.add_argument('-u', '--url', type=str)
-    namespace = parser.parse_args()
-    # main(debug=True)
+# if __name__ == '__main__':
+#     # parser = ArgumentParser(description='Simple web crawler')
+#     # parser.add_argument('-u', '--url', type=str)
+#     # namespace = parser.parse_args()
+
+#     # process = Process(target=main, args=[False])
+#     # process.start()
+#     # process.join()
+
+#     # try:
+#     #     pass
+#     # except KeyboardInterrupt:
+#     #     print('Crawler stopped')
+#     #     sys.exit(0)
+#     # finally:
+#     #     pass
