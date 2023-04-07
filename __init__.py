@@ -1,12 +1,12 @@
-import itertools
 import configparser
 import csv
 import inspect
-from functools import lru_cache
+import itertools
 import json
 import logging
 import pathlib
 from collections import defaultdict
+from functools import lru_cache
 from importlib import import_module
 
 PROJECT_PATH = pathlib.Path('.').absolute()
