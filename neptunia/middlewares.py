@@ -12,6 +12,9 @@ class BaseMiddleware:
     after the page has been retrieved"""
     container = {}
 
+    def __init__(self) -> None:
+        self.verbose_name = self.__class__.__name__
+        
     def __call__(self, response, soup, xml):
         pass
 

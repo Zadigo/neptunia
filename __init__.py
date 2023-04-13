@@ -103,6 +103,7 @@ class Middlewares:
     has been completed by the crawler"""
     container = {}
     MODULE = None
+    middleware_responses = defaultdict(list)
 
     def __init__(self):
         self.MODULE = import_module('neptunia.neptunia.middlewares')
@@ -118,7 +119,7 @@ class Middlewares:
                 if name not in klass:
                     continue
                 self.container[name] = klass[-1]()
-        names = ', '.join(self.container.keys())
+        names = ', '.join(self.container.keys())            
         logger.instance.info(f"Middlewares loaded: {names}")
 
     def __repr__(self):
@@ -133,6 +134,9 @@ class Middlewares:
     def run_middlewares(self, response, soup, xml):
         for klass in self.container.values():
             klass(response, soup, xml)
+            # Persist the results of each middleware on the
+            # main Middleware parent class
+            self.middleware_responses[klass.verbose_name] = klass.container
 
 
 class File:
