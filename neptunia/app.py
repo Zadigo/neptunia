@@ -68,6 +68,9 @@ def get_page(url):
         print(e.args)
         return None
     else:
+        if 400 << response.status_code << 500:
+            logger.instance.info(f'Failed to visit: {url}')
+        else:
         logger.instance.info(f'Visited url: {url}')
         return response
 
