@@ -8,7 +8,7 @@
             "name": "Python: Neptunia",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/neptunia/app.py",
+            "program": "${workspaceFolder}/__main__.py",
             "console": "integratedTerminal",
             "presentation": {
                 "hidden": false,
