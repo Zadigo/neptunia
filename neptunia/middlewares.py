@@ -35,9 +35,24 @@ class TextMixin:
             return self.tokenize(text)
 
     def tokenize(self, text):
-        instance = NLTKWordTokenizer()
+        instance = self.tokenizer_class()
         return instance.tokenize(text)
 
+    def get_vectorizer(self, language='en'):
+        """Use sci-kit word vectorizer to check and remove
+        stop words from the document"""
+        from neptunia import storage
+        filename = 'stop_words_french' if language == 'fr' else 'stop_words_english'
+        text = storage.get_file_content(filename)
+
+        tokenizer = LineTokenizer()
+        french_stop_words = tokenizer.tokenize(text)
+
+        return CountVectorizer(
+            stop_words=french_stop_words,
+            max_df=1.0
+        )
+    
 
 class TextMiddleware(TextMixin, BaseMiddleware):
     """Collects the text on all the visited pages"""
