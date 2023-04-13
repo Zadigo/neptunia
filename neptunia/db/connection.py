@@ -26,6 +26,7 @@ class Where(Expression):
     def as_sql(self):
         pass
 
+
 class BaseConnection:
     def __init__(self):
         self.connection = sqlite3.connect('db.sqlite')
