@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 from lxml import etree
 
 from neptunia import cache, logger, middlewares, storage
+from neptunia.neptunia.utils import write_file
 
 URL = 'https://www.etam.com/'
 
