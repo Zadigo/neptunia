@@ -249,6 +249,10 @@ class Storage:
 
     def get(self, name):
         return self.file_map[name]
+    
+    def get_file_content(self, name):
+        file_object = self.get(name)
+        return file_object.read()
 
 
 cache = Cache()
