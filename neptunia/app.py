@@ -164,6 +164,8 @@ def main(url_filter_funcs=[]):
         # soup to a user defined underlying function
 
         middlewares.run_middlewares(response, soup, xml)
+        # print(middlewares.middleware_responses)
+        write_file('db.txt', middlewares.middleware_responses, filetype='json')
 
         logger.instance.info(f'Waiting {WAIT_TIME} seconds')
         cache.persist('urls_to_visit')

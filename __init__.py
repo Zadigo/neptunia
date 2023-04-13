@@ -136,7 +136,7 @@ class Middlewares:
             klass(response, soup, xml)
             # Persist the results of each middleware on the
             # main Middleware parent class
-            self.middleware_responses[klass.verbose_name] = klass.container
+            self.middleware_responses[klass.verbose_name] = klass.get_container()
 
 
 class File:

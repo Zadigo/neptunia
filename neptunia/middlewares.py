@@ -17,6 +17,12 @@ class BaseMiddleware:
     def __call__(self, response, soup, xml):
         pass
 
+    def get_container(self):
+        to_list = ['set', 'deque']
+        if type(self.container).__name__ in to_list:
+            return list(self.container)
+        return self.container
+
 
 class TextMixin:
     def get_text(self, soup):
