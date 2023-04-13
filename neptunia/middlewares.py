@@ -1,7 +1,8 @@
 import re
 from collections import Counter, OrderedDict, deque
 
-from nltk.tokenize import NLTKWordTokenizer
+from nltk.tokenize import LineTokenizer, NLTKWordTokenizer
+from sklearn.feature_extraction.text import CountVectorizer
 
 from neptunia import logger
 
@@ -11,7 +12,7 @@ class BaseMiddleware:
     after the page has been retrieved"""
     container = {}
 
-    def __init__(self) -> None:
+    def __init__(self):
         self.verbose_name = self.__class__.__name__
         
     def __call__(self, response, soup, xml):
@@ -25,7 +26,10 @@ class BaseMiddleware:
 
 
 class TextMixin:
+    tokenizer_class = NLTKWordTokenizer
+
     def get_text(self, soup):
+        """Returns the text element from a document"""
         try:
             text = soup.text
         except:
@@ -56,10 +60,17 @@ class TextMixin:
 
 class TextMiddleware(TextMixin, BaseMiddleware):
     """Collects the text on all the visited pages"""
+    scrapped_words = set()
 
     def __call__(self, response, soup, xml):
         words = self.get_text(soup)
-        self.container[response.url] = words
+
+        vectorizer = self.get_vectorizer(words)
+        vectorizer.fit_transform(words)
+        vocabulary = vectorizer.vocabulary_
+
+        self.scrapped_words = self.scrapped_words.union(set(words))
+        self.container[response.url] = vocabulary
         logger.instance.info(f'Found {len(words)} words')
 
 

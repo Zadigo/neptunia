@@ -10,7 +10,7 @@ from lxml import etree
 from neptunia import cache, logger, middlewares, storage
 from neptunia.neptunia.utils import write_file
 
-URL = 'https://www.etam.com/'
+URL = 'https://www.pierre-fabre.com/fr-fr'
 
 INITIAL_DOMAIN = urlparse(URL)
 
@@ -20,7 +20,7 @@ URLS_TO_VISIT = set([URL])
 
 VISITED_URLS = set()
 
-WAIT_TIME = 25
+WAIT_TIME = 35
 
 
 def get_url_object(url):
@@ -50,9 +50,7 @@ def useragent_rotator():
 def get_page(url):
     VISITED_URLS.add(url)
 
-    proxy = {
-        'http': proxy_rotator
-    }
+    proxy = {'http': proxy_rotator}
     user_agent = useragent_rotator
 
     try:
@@ -168,7 +166,6 @@ def main(url_filter_funcs=[]):
         # soup to a user defined underlying function
 
         middlewares.run_middlewares(response, soup, xml)
-        # print(middlewares.middleware_responses)
         write_file('db.txt', middlewares.middleware_responses, filetype='json')
 
         logger.instance.info(f'Waiting {WAIT_TIME} seconds')
