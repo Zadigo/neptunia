@@ -1,10 +1,9 @@
 import re
-from collections import Counter, deque
+from collections import Counter, OrderedDict, deque
 
 from nltk.tokenize import NLTKWordTokenizer
 
 from neptunia import logger
-from collections import OrderedDict
 
 
 class BaseMiddleware:
@@ -21,7 +20,13 @@ class BaseMiddleware:
 
 class TextMixin:
     def get_text(self, soup):
-        return self.tokenize(soup.text)
+        try:
+            text = soup.text
+        except:
+            logger.instance.error('Text not found in HTML page')
+            return []
+        else:
+            return self.tokenize(text)
 
     def tokenize(self, text):
         instance = NLTKWordTokenizer()
@@ -101,7 +106,7 @@ class SEOMiddleware(TextMixin, BaseMiddleware):
     """Middleware that runs an SEO audit on
     all the visited pages"""
 
-    audits = deque()
+    container = deque()
     failed_urls = []
     csv_file = [['title', 'title_length', 'title_is_valid', 'description',
                  'description_is_valid', 'url', 'word_analysis', 'status_code']]
@@ -125,35 +130,31 @@ class SEOMiddleware(TextMixin, BaseMiddleware):
                 'meta',
                 attrs={'name': 'description'}
             )
-            description_tokens = self.tokenize(
-                description_object.attrs['content']
-            )
 
-            audit = {
-                'title': title,
-                'title_length': len(title),
-                'title_is_valid': len(title) <= 60,
-                'description': description_object.text,
-                'description_is_valid': len(description_tokens) <= 150,
-                'url': response.url,
-                'word_analysis': dict(OrderedDict(most_common)),
-                'status_code': response.status_code
-            }
-            # self.csv_file.append([
-            #     title,
-            #     len(title),
-            #     len(title) <= 60,
-            #     description,
-            #     len(description) <= 150,
-            #     response.url,
-            #     most_common,
-            #     response.status_code
-            # ])
-            self.audits.append(audit)
+            try:
+                description = description_object.attrs['content']
+                description_text = description_object.text
+            except:
+                logger.instance.error('Could not find description text on page')
+                self.container.append({})
+            else:
+                description_tokens = self.tokenize(description)
+
+                audit = {
+                    'title': title,
+                    'title_length': len(title),
+                    'title_is_valid': len(title) <= 60,
+                    'description': description_text,
+                    'description_is_valid': len(description_tokens) <= 150,
+                    'url': response.url,
+                    'word_analysis': dict(OrderedDict(most_common)),
+                    'status_code': response.status_code
+                }
+                self.container.append(audit)
 
     @property
     def get_report(self):
         return {
-            'audit': self.audits,
+            'audit': self.container,
             'errors': self.failed_urls
         }
