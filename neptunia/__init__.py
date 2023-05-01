@@ -1,9 +1,9 @@
 import configparser
 import csv
+import datetime
 import inspect
 import itertools
 import json
-import datetime
 import logging
 import pathlib
 from collections import defaultdict
@@ -11,7 +11,6 @@ from functools import lru_cache
 from importlib import import_module
 
 PROJECT_PATH = pathlib.Path('.').absolute()
-
 
 class Logger:
     instance = None
@@ -106,7 +105,7 @@ class Middlewares:
     middleware_responses = defaultdict(list)
 
     def __init__(self):
-        self.MODULE = import_module('neptunia.neptunia.middlewares')
+        self.MODULE = import_module('neptunia.middlewares')
         self._middleware_cache = config.load_as_array('options', 'middlewares')
         registered_middlewares = map(
             lambda x: x.rsplit('.', maxsplit=1),
@@ -119,7 +118,7 @@ class Middlewares:
                 if name not in klass:
                     continue
                 self.container[name] = klass[-1]()
-        names = ', '.join(self.container.keys())            
+        names = ', '.join(self.container.keys())
         logger.instance.info(f"Middlewares loaded: {names}")
 
     def __repr__(self):
@@ -136,7 +135,8 @@ class Middlewares:
             klass(response, soup, xml)
             # Persist the results of each middleware on the
             # main Middleware parent class
-            self.middleware_responses[klass.verbose_name] = klass.get_container()
+            self.middleware_responses[klass.verbose_name] = klass.get_container(
+            )
 
 
 class File:
@@ -165,11 +165,11 @@ class File:
 
     @property
     def is_csv(self):
-        return 'csv' in self.path.name
+        return 'csv' in self.path.suffix
 
     @property
     def is_json(self):
-        return 'json' in self.path.name
+        return 'json' in self.path.suffix
 
     def iter_chunks(self, chunks=10):
         """Returns a group of iterators sliced by `n`
@@ -249,7 +249,7 @@ class Storage:
 
     def get(self, name):
         return self.file_map[name]
-    
+
     def get_file_content(self, name):
         file_object = self.get(name)
         return file_object.read()

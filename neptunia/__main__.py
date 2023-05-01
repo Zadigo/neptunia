@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 from multiprocessing import Process
 # from neptunia.neptunia.registry import registry
 
-from neptunia.neptunia.app import main
+from neptunia.app import main
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Simple web crawler')

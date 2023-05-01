@@ -6,9 +6,9 @@ from urllib.parse import urljoin, urlparse
 import requests
 from bs4 import BeautifulSoup
 from lxml import etree
+from neptunia.utils import write_file
 
 from neptunia import cache, logger, middlewares, storage
-from neptunia.neptunia.utils import write_file
 
 URL = 'https://www.pierre-fabre.com/fr-fr'
 
@@ -67,7 +67,7 @@ def get_page(url):
         print(e.args)
         return None
     else:
-        if 400 << response.status_code << 500:
+        if 400 <= response.status_code <= 500:
             logger.instance.info(f'Failed to visit: {url}')
         else:
             logger.instance.info(f'Visited url: {url}')
@@ -75,10 +75,14 @@ def get_page(url):
 
 
 def get_soup(response):
+    """Returns the BeautifulSoup object
+    of the current page"""
     return BeautifulSoup(response.content, 'html.parser')
 
 
 def get_xml_page(response):
+    """Returns the XML object of the
+     current page"""
     parser = etree.HTMLParser(encoding='utf-8', remove_comments=True)
     instance = etree.fromstring(response.content, parser)
     return instance
