@@ -1,8 +1,8 @@
 {
     "python.autoComplete.extraPaths": [
-        "${workspaceFolder}/neptunia/neptunia"       
+        "${workspaceFolder}/neptunia/neptunia/"       
     ],
     "python.analysis.extraPaths": [
-        "${workspaceFolder}/neptunia/neptunia"
+        "${workspaceFolder}/neptunia/neptunia/"
     ]
 }

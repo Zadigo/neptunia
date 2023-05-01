@@ -9,6 +9,7 @@ from lxml import etree
 from neptunia.utils import write_file
 
 from neptunia import cache, logger, middlewares, storage
+from neptunia.signals import Signal
 
 URL = 'https://www.pierre-fabre.com/fr-fr'
 
@@ -21,6 +22,9 @@ URLS_TO_VISIT = set([URL])
 VISITED_URLS = set()
 
 WAIT_TIME = 35
+
+post_init = Signal()
+address_visited = Signal()
 
 
 def get_url_object(url):
