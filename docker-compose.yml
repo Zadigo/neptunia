@@ -6,7 +6,7 @@ volumes:
 
 services:
   neptunia:
-    build: ./neptunia
+    build: .
     container_name: neptunia_app
     ports:
       - 8000:8000

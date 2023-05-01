@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM python:latest
 
 ENV USER=neptunia
 # Create group
@@ -9,11 +9,11 @@ RUN useradd --uid 1000 --gid 1000 --base-dir /neptunia --home-dir /neptunia ${US
 
 LABEL "com.example.neptunia"="neptunia"
 
-RUN apt-get update
+# RUN apt-get update
 
-RUN apt-get install -y python3
+# RUN apt-get install -y python3
 
-RUN apt-get install -y python3-pip
+# RUN apt-get install -y python3-pip
 
 RUN python3 --version
 
@@ -31,11 +31,11 @@ RUN mkdir neptunia
 
 WORKDIR /neptunia
 
-RUN echo 'export PATH=$PATH:/neptunia/neptunia/app.py' >> ~/.bashrc
+# RUN echo 'export PATH=$PATH:/neptunia/neptunia/app.py' >> ~/.bashrc
 
-RUN . ~/.bashrc
+# RUN . ~/.bashrc
 
-RUN echo $PATH
+# RUN echo $PATH
 
 COPY . .
 
