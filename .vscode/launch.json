@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Neptunia",
+            "name": "Neptunia: Main",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/__main__.py",
@@ -16,6 +16,20 @@
                 "order": 1
             },
             "justMyCode": true
-        }
+        },
+        {
+            "name": "Neptunia: Current file",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "justMyCode": true,
+            "presentation": {
+                "hidden": false,
+                "group": "Neptunia",
+                "order": 1
+            }
+        },
     ]
 }
