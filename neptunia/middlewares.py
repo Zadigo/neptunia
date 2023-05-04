@@ -95,9 +95,17 @@ class EmailMiddleware(TextMixin, BaseMiddleware):
 
         def parse_url(url):
             value = url.attrs.get('href', None)
-            if value is not None and '@' in value:
-                return value
+
+            if value is None:
+                return None
+
+            if value.startswith('mailto:'):
+                email = value.removeprefix('mailto:')
+                return email
             return None
+        
+        def resolve_tokenized_emails(value):
+            pass
 
         # 1. Get all possible emails from plain text
         emails_from_text = map(identify_email, self.get_text(soup))
@@ -112,6 +120,7 @@ class EmailMiddleware(TextMixin, BaseMiddleware):
 
         self.container = self.container.union(valid_items)
         logger.instance.info(f"Found {len(valid_items)} email(s)")
+        logger.instance.info(f'{len(self.container)} captured emails in total')
 
 
 class ImageMiddleware(BaseMiddleware):
