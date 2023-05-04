@@ -6,10 +6,10 @@ from urllib.parse import urljoin, urlparse
 import requests
 from bs4 import BeautifulSoup
 from lxml import etree
-from neptunia.utils import write_file
 
 from neptunia import cache, logger, middlewares, storage
 from neptunia.signals import Signal
+from neptunia.utils import write_file
 
 URL = 'https://www.pierre-fabre.com/fr-fr'
 
@@ -144,8 +144,20 @@ def get_page_urls(response, url_filter_funcs=[]):
     logger.instance.info(f'{len(links_found)} urls found')
 
 
-def main(url_filter_funcs=[]):
+def main(start_urls=[]):
     """Main entry point for the webcrawler"""
+
+    # from neptunia.registry import registry
+    # if not registry.is_ready:
+    #     app_registry = registry(
+    #         initial_cache={'start_urls': URLS_TO_VISIT}
+    #     )
+    
+    # We can also pass a list of starting
+    # urls to run the scrapping
+    if start_urls:
+        for url in start_urls:
+            URLS_TO_VISIT.add(url)
 
     while URLS_TO_VISIT:
         url_to_visit = URLS_TO_VISIT.pop()
@@ -162,7 +174,7 @@ def main(url_filter_funcs=[]):
         if response is None:
             continue
 
-        get_page_urls(response, url_filter_funcs=url_filter_funcs)
+        get_page_urls(response)
 
         cache.set('urls_to_visit', list(URLS_TO_VISIT))
         cache.set('visited_urls', list(VISITED_URLS))
@@ -179,3 +191,35 @@ def main(url_filter_funcs=[]):
         logger.instance.info(f'Waiting {WAIT_TIME} seconds')
         cache.persist('urls_to_visit')
         time.sleep(WAIT_TIME)
+
+
+def main_from_xml(xml_url):
+    """Start parsing a website from the website's
+      XML index"""
+
+    # proxy = {'http': proxy_rotator}
+    user_agent = useragent_rotator
+
+    try:
+        response = requests.get(
+            xml_url,
+            headers={'User-Agent': user_agent}
+        )
+    except:
+        raise
+    else:
+        parser = etree.XMLParser(encoding='utf-8')
+        root = etree.fromstring(response.content.decode('utf-8'), parser)
+
+        urls = [item.text for item in root.iter()]
+
+        def clean_url(url):
+            if url is None or url == '\n':
+                return False
+            
+            if url == URL:
+                return False
+            
+            return True
+        clean_urls = list(filter(clean_url, urls))
+        main(start_urls=clean_urls)
