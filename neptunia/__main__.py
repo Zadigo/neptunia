@@ -1,9 +1,9 @@
 import multiprocessing
 from argparse import ArgumentParser
 from multiprocessing import Process
-# from neptunia.neptunia.registry import registry
+from neptunia.registry import registry
 
-from neptunia.app import main
+from neptunia.app import main, main_from_xml
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Simple web crawler')
@@ -11,7 +11,8 @@ if __name__ == '__main__':
     parser.add_argument('-w', '--wait', type=int, help='Waiting time')
     namespace = parser.parse_args()
 
-    # registry.load_registry()
+    # registry.load()
+    # registry.run_scrapper()
     process = Process(target=main, args=[False])
 
     try:
