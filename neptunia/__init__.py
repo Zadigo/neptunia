@@ -56,6 +56,10 @@ class Cache:
         else:
             self.container[key].append(value)
 
+    def bulk_set(self, **kwargs):
+        for key, value in kwargs.items():
+            self.set(key, value)
+
     def get(self, key):
         return self.container[key]
 
