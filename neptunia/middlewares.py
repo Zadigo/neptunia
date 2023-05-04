@@ -159,7 +159,10 @@ class SEOMiddleware(TextMixin, BaseMiddleware):
                 'status_code': response.status_code
             })
         else:
-            title = soup.find('title').text
+            try:
+                title = soup.find('title').text
+            except:
+                title = None
 
             # instance = NLTKWordTokenizer()
             # tokens = instance.tokenize(soup.body.text)
