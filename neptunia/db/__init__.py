@@ -1,3 +1,3 @@
-# from neptunia.neptunia.db.connection import Compiler
+from neptunia.neptunia.db.connection import SQLiteConnection
 
-# live_connection = Compiler()
+live_connection = SQLiteConnection()

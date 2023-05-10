@@ -1,13 +1,9 @@
-# from neptunia.neptunia.db import live_connection
-
-
 import dataclasses
 from collections import defaultdict
-from neptunia.neptunia.db.connection import Compiler
-from neptunia.neptunia.db.models import Link
 
 
 class Expression:
+    wildcard_all = '*'
     select = "SELECT {lhv} FROM {table}"
     create = "CREATE TABLE {table} ({fields})"
     insert = "INSERT INTO {table} ({columns}) VALUES ({values})"
@@ -26,6 +22,27 @@ class Expression:
     def as_sql(self):
         return None
 
+    def quote_value(self, value):
+        if value.startswith('('):
+            return value
+        return f"'{value}'"
+    
+    def build_ordering(self, field):
+        expression = 'ORDER BY {field}'
+        return expression.format(field=field)
+    
+    def build_limit(self, limit=1):
+        expression = 'LIMIT {limit}'
+        return expression.format(field=limit)
+    
+    def build_bulk_values(self, iterables):
+        values = []
+        for iterable in iterables:
+            items = self.build_fields(*iterable)
+            values.append(f"({items})")
+        return self.build_fields(*values)
+
+
     def build_select(self, lhv, table):
         """Build the 'select' sql"""
         return self.select.format(lhv=lhv, table=table)
@@ -42,17 +59,30 @@ class Expression:
     def build_negative_wildcard(self, rhv):
         """Build the negative wildcard sql e.g. NOT LIKE"""
         return self.negative_wildcard.format(rhv=rhv)
+    
+    def build_values(self, *args):
+        """Safely build the fields for an
+        sql query e.g. 'field1','field2'"""
+        wrong_fields = []
+        quoted_values = []
+        for value in args:
+            if not isinstance(value, str):
+                wrong_fields.append(value)
+            quoted_values.append(self.quote_value(value))
+        if wrong_fields:
+            raise
+        return ",".join(quoted_values)
 
     def build_fields(self, *args):
         """Safely build the fields for an
-        sql query e.g. field1,field2"""
+        sql query e.g. 'field1','field2'"""
         wrong_fields = []
         for value in args:
             if not isinstance(value, str):
                 wrong_fields.append(value)
         if wrong_fields:
             raise
-        return ','.join(args)
+        return ",".join(args)
 
     def cast_field_to_type(self, name, field_type):
         default_type = 'TEXT'
@@ -90,11 +120,11 @@ class And(Expression):
 
 
 class Table(Expression):
-    def __init__(self, table_name, connection=None):
+    def __init__(self, table_name, compiler=None):
         super().__init__()
 
-        if connection is not None:
-            self.connection = connection
+        if compiler is not None:
+            self.compiler = compiler
 
         self.table_name = table_name
         self.main_table_name = 'sqlite_master'
@@ -114,11 +144,11 @@ class Table(Expression):
             and_object,
             self.build_negative_wildcard('sqlite_%')
         )
-        return self.connection.compile(bits)
+        return self.compiler.compile(bits)
 
     def check_table_exists(self):
         """Checks if a table exists in the database"""
-        tables = self.connection.execute(self.check_table_exists_sql())
+        tables = self.compiler.execute(self.check_table_exists_sql())
         return self.table_name in tables
 
     def create_table(self):
@@ -127,7 +157,7 @@ class Table(Expression):
         self.table_name = model_name.lower()
         fields = self.model_fields[self.model]
         if not fields:
-            field_objects = dataclasses.fields(Link)
+            field_objects = dataclasses.fields(self.model)
             for field in field_objects:
                 fields.add(field.name)
                 self.fields_map[field.name] = field.type
@@ -141,8 +171,8 @@ class Table(Expression):
             true_fields.append(result)
         sql_fields = self.build_fields(*list(true_fields))
         sql = self.create.format(table=self.table_name, fields=sql_fields)
-        final_sql = self.connection.compile([sql])
-        self.connection.execute(final_sql)
+        final_sql = self.compiler.compile([sql])
+        self.compiler.execute(final_sql)
         print(true_fields)
 
     def delete_table(self):
@@ -150,28 +180,26 @@ class Table(Expression):
 
     def insert_value(self):
         """Inserts an item in the database"""
+        fields = ['url']
+        sql = self.insert.format(
+            table=self.table_name,
+            columns=self.build_fields(*fields),
+            values=self.build_fields(*("'http://example.com'",))
+        )
+        final_sql = self.compiler.compile([sql])
+        self.compiler.execute(final_sql)
+
+    def insert_values(self):
+        """
+        INSERT INTO 'tablename'
+                SELECT 'data1' AS 'column1', 'data2' AS 'column2'
+            UNION ALL SELECT 'data1', 'data2'
+            UNION ALL SELECT 'data1', 'data2'
+            UNION ALL SELECT 'data1', 'data2'
+        """
 
     def delete_value(self):
         pass
 
     def update_value(self):
         pass
-
-
-live_connection = Compiler()
-
-table = Table('mytable', connection=live_connection)
-table.model = Link
-table.create_table()
-
-# a = table.check_table_exists()
-# b = table.run_sql(a)
-# print(b)
-
-# compiler = Compiler()
-# print(compiler)
-# values = connection.get_cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
-# print(list(values))
-
-
-Link.objects.all()
